@@ -18,13 +18,7 @@ pub struct PublicPlayer {
 
 #[derive(Deserialize, Serialize)]
 pub enum ChallengeAnswer {
-    ChallengeName(ChallengeOutput)
-}
-
-#[derive(Deserialize, Serialize)]
-pub struct ChallengeResult {
-    name: ChallengeAnswer,
-    next_target: String
+    // ChallengeName(ChallengeOutput)
 }
 
 #[derive(Deserialize, Serialize)]
@@ -38,8 +32,5 @@ pub enum ChallengeValue {
 #[derive(Deserialize, Serialize)]
 pub struct ReportedChallengeResult {
     name: String,
-    value: JobValue
+    value: ChallengeValue
 }
-
-#[derive(Deserialize, Serialize)]
-pub struct PublicLeaderBoard(Vec<PublicPlayer>);
