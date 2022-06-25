@@ -6,48 +6,56 @@ use crate::domain::{
     SubscribeError
 };
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub enum Message {
-    Hello
+    Hello,
+    Welcome(Welcome),
+    Subscribe(Subscribe),
+    SubscribeResult(SubscribeResult),
+    PublicLeaderBoard(PublicLeaderBoard),
+    Challenge(Challenge),
+    ChallengeResult(ChallengeResult),
+    RoundSummary(RoundSummary),
+    EndOfGame(EndOfGame)
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct Welcome {
     version: u8
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct Subscribe {
     name: String
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub enum SubscribeResult {
     Ok,
     Err(SubscribeError)
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct PublicLeaderBoard(Vec<PublicPlayer>);
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub enum Challenge {
-    // ChallengeName()
+    // ChallengeName(ChallengeInput)
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct ChallengeResult {
     name: ChallengeAnswer,
     next_target: String
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct RoundSummary {
     challenge: String,
     chain: Vec<ReportedChallengeResult>
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct EndOfGame {
     leader_board: PublicLeaderBoard
 }

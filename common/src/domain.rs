@@ -1,12 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub enum SubscribeError {
     AlreadyRegistered, 
     InvalidName
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct PublicPlayer {
     name: String,
     stream_id: String,
@@ -16,12 +16,12 @@ pub struct PublicPlayer {
     total_used_time: f64
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub enum ChallengeAnswer {
     // ChallengeName(ChallengeOutput)
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub enum ChallengeValue {
     Unreachable,
     Timeout,
@@ -29,7 +29,7 @@ pub enum ChallengeValue {
     Ok { used_time: f64, next_target: String }
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct ReportedChallengeResult {
     name: String,
     value: ChallengeValue
