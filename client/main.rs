@@ -1,4 +1,4 @@
-use std::{net::{TcpStream, Shutdown}, io::{Write, Read}};
+use std::{net::{TcpStream, Shutdown}, io::{Write, Read}, env};
 use serde_json;
 use common::domain::ChallengeAnswer;
 use common::message::{
@@ -35,9 +35,6 @@ fn main() {
             println!("Cannot connect to server: {}", e);
         }
     }
-    // let input = MD5HashCashInput::new(9, "Hello");
-    // let data = Challenge::MD5HashCash(input);
-    // println!("{:?}", serde_json::to_string(&Message::Challenge(data)));
 }
 
 fn write_message(message: &Message, stream: &mut TcpStream) {
@@ -68,9 +65,12 @@ fn handle_incoming_message(msg: &Message, stream: &mut TcpStream) -> bool {
     println!("\n{:?}", msg);
     match msg {
         Message::Welcome(welcome) => {
-            // println!("{:?}", welcome);
+            let args: Vec<String> = env::args().collect();
+            let default = "omniscient_adjucator";
+            let username = args.get(1).map_or(default, |r| r.as_str());
+
             write_message(&Message::Subscribe(
-                Subscribe::new("omniscient_adjucator") 
+                Subscribe::new(username) 
             ), stream);
             true
         },

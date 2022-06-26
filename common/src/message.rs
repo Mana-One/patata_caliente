@@ -46,7 +46,7 @@ pub enum Challenge {
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct ChallengeResult {
-    result: ChallengeAnswer,
+    answer: ChallengeAnswer,
     next_target: String
 }
 
@@ -68,7 +68,7 @@ impl Subscribe {
 }
 
 impl ChallengeResult {
-    pub fn new(result: ChallengeAnswer, next_target: &str) -> ChallengeResult {
-        ChallengeResult { result, next_target: String::from(next_target) }
+    pub fn new(answer: ChallengeAnswer, next_target: &str) -> ChallengeResult {
+        ChallengeResult { answer, next_target: String::from(next_target) }
     }
 }
