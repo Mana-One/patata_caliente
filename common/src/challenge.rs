@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use rand::distributions::{Distribution, Uniform};
 
 pub trait Challenge {
     type Input;
@@ -45,14 +46,34 @@ impl Challenge for MD5HashCashChallenge {
         MD5HashCashChallenge { input }
     }
 
-    fn solve(&self) -> Self::Output { // TODO
-        Self::Output {
-            seed: 0x034C,
-            hashcode: String::from("00441745D9BDF8E5D3C7872AC9DBB2C3")
+    fn solve(&self) -> Self::Output {
+        let mut rng = rand::thread_rng();
+        let field = Uniform::from(0..u64::MAX);
+    
+        loop {
+            let seed = field.sample(&mut rng);
+            let input = format!("{seed:0>16X}{}", self.input.message);
+            let hashcode = format!("{:X}", md5::compute(&input));
+    
+            let zeros = count_bits_to_zero(&hashcode);
+            if zeros >= self.input.complexity {
+                return Self::Output {
+                    seed,
+                    hashcode
+                };
+            }
         }
     }
 
     fn verify(&self, answer: &Self::Output) -> bool {
-        true
+        let seed = answer.seed;
+        let input = format!("{seed:0>16X}{}", self.input.message);
+        let hashcode = format!("{:X}", md5::compute(&input));
+        answer.hashcode == hashcode
     }
+}
+
+fn count_bits_to_zero(hex_string: &str) -> u32 {
+    let hex_value = u128::from_str_radix(hex_string, 16).unwrap();
+    hex_value.leading_zeros()
 }

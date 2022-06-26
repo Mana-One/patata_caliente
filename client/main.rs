@@ -13,6 +13,10 @@ use common::challenge::{MD5HashCashChallenge, Challenge as ChallengTrait};
 fn main() {
     println!("Connecting to server...\n");
 
+    let args: Vec<String> = env::args().collect();
+    let default = "omniscient_adjucator";
+    let username = args.get(1).map_or(default, |r| r.as_str());
+
     let stream = TcpStream::connect("localhost:7878");
     match stream {
         Ok(mut stream) => {
@@ -20,7 +24,7 @@ fn main() {
             write_message(&Message::Hello, &mut stream);
             
             loop {
-                if !read_message(&mut stream) {
+                if !read_message(&mut stream, username) {
                     break;
                 }
             }
@@ -47,7 +51,7 @@ fn write_message(message: &Message, stream: &mut TcpStream) {
 }
 
 // returns boolean indicating whether the client should keep the TCP connection alive
-fn read_message(stream: &mut TcpStream) -> bool {
+fn read_message(stream: &mut TcpStream, username: &str) -> bool {
     // READ SIZE OF RESPONSE
     let mut size_res = [0u8; 4];
     stream.read_exact(&mut size_res).unwrap();
@@ -58,16 +62,14 @@ fn read_message(stream: &mut TcpStream) -> bool {
     stream.read_exact(&mut data_res).unwrap();
     let msg = serde_json::from_str::<Message>(&String::from_utf8_lossy(&data_res)).unwrap();
 
-    handle_incoming_message(&msg, stream)
+    handle_incoming_message(&msg, stream, username)
 }
 
-fn handle_incoming_message(msg: &Message, stream: &mut TcpStream) -> bool {
+fn handle_incoming_message(msg: &Message, stream: &mut TcpStream, username: &str) -> bool {
     println!("\n{:?}", msg);
     match msg {
         Message::Welcome(welcome) => {
-            let args: Vec<String> = env::args().collect();
-            let default = "omniscient_adjucator";
-            let username = args.get(1).map_or(default, |r| r.as_str());
+
 
             write_message(&Message::Subscribe(
                 Subscribe::new(username) 
@@ -91,9 +93,12 @@ fn handle_incoming_message(msg: &Message, stream: &mut TcpStream) -> bool {
                 Challenge::MD5HashCash(hash_cash) => {
                     let data = MD5HashCashChallenge::new(hash_cash.clone());
                     let answer = data.solve();
+                    let target = if username == "omniscient_adjucator" 
+                        { "abject_testament" } 
+                        else { "omniscient_adjucator" };
                     let message = ChallengeResult::new(
                         ChallengeAnswer::MD5HashCash(answer), 
-                        "omniscient_adjucator"
+                        target
                     );
                     write_message(&Message::ChallengeResult(message), stream);
                     true
