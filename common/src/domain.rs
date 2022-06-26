@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use crate::challenge::MD5HashCashOutput;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub enum SubscribeError {
@@ -18,7 +19,7 @@ pub struct PublicPlayer {
 
 #[derive(Deserialize, Serialize, Debug)]
 pub enum ChallengeAnswer {
-    // ChallengeName(ChallengeOutput)
+    MD5HashCash(MD5HashCashOutput)
 }
 
 #[derive(Deserialize, Serialize, Debug)]

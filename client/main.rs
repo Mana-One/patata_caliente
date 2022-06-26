@@ -1,6 +1,6 @@
 use std::{net::{TcpStream, Shutdown}, io::{Write, Read}};
 use serde_json;
-use common::{Message, Subscribe};
+use common::{Message, Subscribe, SubscribeResult, Challenge, challenge::{MD5HashCash, Challenge as ChallengTrait}, ChallengeResult, ChallengeAnswer};
 
 fn main() {
     println!("Connecting to server...\n");
@@ -18,7 +18,10 @@ fn main() {
             }
 
             // PROPERLY CLOSE CONNECTION
-            stream.shutdown(Shutdown::Both).expect("Error while shutting down.");
+            match stream.shutdown(Shutdown::Both) {
+                Ok(_) => println!("Client shutdown."),
+                Err(_) => {}
+            };
         },
         Err(e) => {
             println!("Cannot connect to server: {}", e);
@@ -35,7 +38,7 @@ fn write_message(message: &Message, stream: &mut TcpStream) {
     stream.write_all(json).unwrap();
 }
 
-// returns boolean indicating wether the client should keep the TCP connection alive
+// returns boolean indicating whether the client should keep the TCP connection alive
 fn read_message(stream: &mut TcpStream) -> bool {
     // READ SIZE OF RESPONSE
     let mut size_res = [0u8; 4];
@@ -46,31 +49,48 @@ fn read_message(stream: &mut TcpStream) -> bool {
     let mut data_res: Vec<u8> = vec![0u8; size.try_into().unwrap()];
     stream.read_exact(&mut data_res).unwrap();
     let msg = serde_json::from_str::<Message>(&String::from_utf8_lossy(&data_res)).unwrap();
-    println!("Received {:?}\n", msg);
 
+    handle_incoming_message(&msg, stream)
+}
+
+fn handle_incoming_message(msg: &Message, stream: &mut TcpStream) -> bool {
     match msg {
         Message::Welcome(welcome) => {
-            println!("{:?}", welcome);
+            // println!("{:?}", welcome);
             write_message(&Message::Subscribe(
                 Subscribe::new("omniscient_adjucator") 
             ), stream);
             true
         },
         Message::SubscribeResult(subcribe_result) => {
-            println!("{:?}", subcribe_result);
-            false
+            // println!("{:?}", subcribe_result);
+            match subcribe_result {
+                SubscribeResult::Ok => true,
+                SubscribeResult::Err(_) => false
+            }
         },
         Message::PublicLeaderBoard(public_leader_board) => { 
-            println!("{:?}", public_leader_board);
-            false 
+            // println!("{:?}", public_leader_board);
+            true
         },
         Message::Challenge(challenge) => { 
-            println!("{:?}", challenge);
-            false 
+            println!("Received {:?}", challenge);
+            match challenge {
+                Challenge::MD5HashCash(hash_cash) => {
+                    let data = MD5HashCash::new(hash_cash.clone());
+                    let answer = data.solve();
+                    let message = ChallengeResult::new(
+                        ChallengeAnswer::MD5HashCash(answer), 
+                        "omniscient_adjucator"
+                    );
+                    write_message(&Message::ChallengeResult(message), stream);
+                    true
+                }
+            }
         },
         Message::RoundSummary(round_summary) => { 
-            println!("{:?}", round_summary);
-            false 
+            // println!("{:?}", round_summary);
+            true 
         },
         Message::EndOfGame(end_of_game) => { 
             println!("{:?}", end_of_game);

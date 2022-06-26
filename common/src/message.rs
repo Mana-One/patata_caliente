@@ -5,6 +5,7 @@ use crate::domain::{
     ReportedChallengeResult, 
     SubscribeError
 };
+use crate::challenge:: MD5HashCashInput;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub enum Message {
@@ -40,12 +41,12 @@ pub struct PublicLeaderBoard(Vec<PublicPlayer>);
 
 #[derive(Deserialize, Serialize, Debug)]
 pub enum Challenge {
-    // ChallengeName(ChallengeInput)
+    MD5HashCash(MD5HashCashInput)
 }
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct ChallengeResult {
-    name: ChallengeAnswer,
+    result: ChallengeAnswer,
     next_target: String
 }
 
@@ -63,5 +64,11 @@ pub struct EndOfGame {
 impl Subscribe {
     pub fn new(name: &str) -> Subscribe {
         Subscribe { name: String::from(name) }
+    }
+}
+
+impl ChallengeResult {
+    pub fn new(result: ChallengeAnswer, next_target: &str) -> ChallengeResult {
+        ChallengeResult { result, next_target: String::from(next_target) }
     }
 }
