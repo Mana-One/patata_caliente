@@ -1,6 +1,14 @@
 use std::{net::{TcpStream, Shutdown}, io::{Write, Read}};
 use serde_json;
-use common::{Message, Subscribe, SubscribeResult, Challenge, challenge::{MD5HashCash, Challenge as ChallengTrait}, ChallengeResult, ChallengeAnswer};
+use common::domain::ChallengeAnswer;
+use common::message::{
+    Message, 
+    Subscribe, 
+    SubscribeResult, 
+    Challenge, 
+    ChallengeResult,
+};
+use common::challenge::{MD5HashCashChallenge, Challenge as ChallengTrait};
 
 fn main() {
     println!("Connecting to server...\n");
@@ -27,6 +35,9 @@ fn main() {
             println!("Cannot connect to server: {}", e);
         }
     }
+    // let input = MD5HashCashInput::new(9, "Hello");
+    // let data = Challenge::MD5HashCash(input);
+    // println!("{:?}", serde_json::to_string(&Message::Challenge(data)));
 }
 
 fn write_message(message: &Message, stream: &mut TcpStream) {
@@ -54,6 +65,7 @@ fn read_message(stream: &mut TcpStream) -> bool {
 }
 
 fn handle_incoming_message(msg: &Message, stream: &mut TcpStream) -> bool {
+    println!("\n{:?}", msg);
     match msg {
         Message::Welcome(welcome) => {
             // println!("{:?}", welcome);
@@ -74,10 +86,10 @@ fn handle_incoming_message(msg: &Message, stream: &mut TcpStream) -> bool {
             true
         },
         Message::Challenge(challenge) => { 
-            println!("Received {:?}", challenge);
+            // println!("Received {:?}", challenge);
             match challenge {
                 Challenge::MD5HashCash(hash_cash) => {
-                    let data = MD5HashCash::new(hash_cash.clone());
+                    let data = MD5HashCashChallenge::new(hash_cash.clone());
                     let answer = data.solve();
                     let message = ChallengeResult::new(
                         ChallengeAnswer::MD5HashCash(answer), 
@@ -93,7 +105,7 @@ fn handle_incoming_message(msg: &Message, stream: &mut TcpStream) -> bool {
             true 
         },
         Message::EndOfGame(end_of_game) => { 
-            println!("{:?}", end_of_game);
+            // println!("{:?}", end_of_game);
             false 
         },
         _ => {

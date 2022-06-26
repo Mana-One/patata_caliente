@@ -11,7 +11,7 @@ pub trait Challenge {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-pub struct MD5HashCash {
+pub struct MD5HashCashChallenge {
     input: MD5HashCashInput
 }
 
@@ -27,7 +27,13 @@ pub struct MD5HashCashOutput {
     hashcode: String,
 }
 
-impl Challenge for MD5HashCash {
+impl MD5HashCashInput {
+    fn new(complexity: u32, message: &str) -> MD5HashCashInput {
+        MD5HashCashInput { complexity, message: String::from(message) }
+    }
+}
+
+impl Challenge for MD5HashCashChallenge {
     type Input = MD5HashCashInput;
     type Output = MD5HashCashOutput;
 
@@ -36,7 +42,7 @@ impl Challenge for MD5HashCash {
     }
 
     fn new(input: Self::Input) -> Self {
-        MD5HashCash { input }
+        MD5HashCashChallenge { input }
     }
 
     fn solve(&self) -> Self::Output { // TODO

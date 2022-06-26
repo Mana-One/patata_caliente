@@ -1,6 +1,3 @@
-mod domain;
-mod message;
+pub mod domain;
+pub mod message;
 pub mod challenge;
-
-pub use domain::*;
-pub use message::*;
