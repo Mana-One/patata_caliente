@@ -59,3 +59,9 @@ pub struct RoundSummary {
 pub struct EndOfGame {
     leader_board: PublicLeaderBoard
 }
+
+impl Subscribe {
+    pub fn new(name: &str) -> Subscribe {
+        Subscribe { name: String::from(name) }
+    }
+}
