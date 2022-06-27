@@ -1,5 +1,5 @@
+use clap::{Arg, App, SubCommand};
 use std::net::{TcpStream, Shutdown};
-use std::env;
 use common::domain::{ChallengeAnswer, PublicPlayer};
 use common::message::{
     Message, 
@@ -12,10 +12,32 @@ use common::challenge::{md5_hashcash::MD5HashCashChallenge, Challenge as Challen
 use common::utils;
 
 fn main() {
-    println!("Connecting to server...\n");
+    let app = App::new("La patata caliente")
+        .about("A client app for 'La patate chaude'... but it's in a Spanish name.")
+        .author("Paul Barrié | Paolo Manaois | Adem Mrizak")
+        .version("0.1.0")
+        .subcommand_required(true)
+        .subcommand(SubCommand::with_name("run")
+            .about("Runs the client")
+            .arg_required_else_help(true)
+            .arg(Arg::new("username")
+                .short('u')
+                .takes_value(true)
+                .value_name("USERNAME")));
 
-    let args: Vec<String> = env::args().collect();
-    let username = args.get(1).expect("Missing username !");
+    let matches = app.get_matches();
+    match matches.subcommand() {
+        Some(("run", run_args)) => {
+            if let Some(username) = run_args.get_one::<String>("username") {
+                launch_client(username.to_string());
+            }
+        },
+        _ => unreachable!("Exhausted list of subcommands")
+    }
+}
+
+fn launch_client(username: String) {
+    println!("Connecting to server...\n");
 
     let stream = TcpStream::connect("localhost:7878");
     let players: Vec<PublicPlayer> = vec![];
