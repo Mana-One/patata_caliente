@@ -7,14 +7,14 @@ pub enum SubscribeError {
     InvalidName
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct PublicPlayer {
-    name: String,
-    stream_id: String,
-    score: i32,
-    steps: u32,
-    is_active: bool,
-    total_used_time: f64
+    pub name: String,
+    pub stream_id: String,
+    pub score: i32,
+    pub steps: u32,
+    pub is_active: bool,
+    pub total_used_time: f64
 }
 
 #[derive(Deserialize, Serialize, Debug)]

@@ -1,6 +1,6 @@
 use std::net::{TcpStream, Shutdown};
 use std::env;
-use common::domain::ChallengeAnswer;
+use common::domain::{ChallengeAnswer, PublicPlayer};
 use common::message::{
     Message, 
     Subscribe, 
@@ -18,7 +18,8 @@ fn main() {
     let username = args.get(1).expect("Missing username !");
 
     let stream = TcpStream::connect("localhost:7878");
-    let mut handle_message = message_handler_builder(username.to_string());
+    let players: Vec<PublicPlayer> = vec![];
+    let mut handle_message = message_handler_builder(username.to_string(), players);
 
     match stream {
         Ok(mut stream) => {
@@ -43,7 +44,7 @@ fn main() {
     }
 }
 
-fn message_handler_builder(username: String) -> utils::MessageHandler {
+fn message_handler_builder(username: String, mut players: Vec<PublicPlayer>) -> utils::MessageHandler {
     Box::new(move |msg, stream| {
         println!("\n{:?}", msg);
         match msg {
@@ -60,9 +61,15 @@ fn message_handler_builder(username: String) -> utils::MessageHandler {
                     SubscribeResult::Err(_) => false
                 }
             },
-            Message::PublicLeaderBoard(_public_leader_board) => { 
-                // println!("{:?}", public_leader_board);
-                true
+            Message::PublicLeaderBoard(public_leader_board) => { 
+                players.append(&mut public_leader_board.0
+                    .clone()
+                    .into_iter()
+                    .filter(|p| p.name != username)
+                    .collect::<Vec<PublicPlayer>>()
+                );
+                
+                !players.is_empty()
             },
             Message::Challenge(challenge) => { 
                 // println!("Received {:?}", challenge);
@@ -70,12 +77,17 @@ fn message_handler_builder(username: String) -> utils::MessageHandler {
                     Challenge::MD5HashCash(hash_cash) => {
                         let data = MD5HashCashChallenge::new(hash_cash.clone());
                         let answer = data.solve();
-                        let target = if username == "omniscient_adjucator" 
-                            { "abject_testament" } 
-                            else { "omniscient_adjucator" };
+
+                        let mut sorted_players = players.clone();
+                        sorted_players.sort_by(|a, b| a.score.cmp(&b.score));
+                        let target = sorted_players.get(0).map(|p| p.name.as_str());
+                        if let None = target {
+                            return false;
+                        }
+
                         let message = ChallengeResult::new(
                             ChallengeAnswer::MD5HashCash(answer), 
-                            target
+                            target.unwrap()
                         );
                         utils::write_message(&Message::ChallengeResult(message), stream);
                         true

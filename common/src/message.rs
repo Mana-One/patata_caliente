@@ -37,7 +37,7 @@ pub enum SubscribeResult {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-pub struct PublicLeaderBoard(Vec<PublicPlayer>);
+pub struct PublicLeaderBoard(pub Vec<PublicPlayer>);
 
 #[derive(Deserialize, Serialize, Debug)]
 pub enum Challenge {
