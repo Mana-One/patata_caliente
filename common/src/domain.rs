@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use crate::challenge::MD5HashCashOutput;
+use crate::challenge::md5_hashcash::MD5HashCashOutput;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub enum SubscribeError {

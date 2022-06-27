@@ -1,15 +1,7 @@
 use serde::{Deserialize, Serialize};
 use rand::distributions::{Distribution, Uniform};
-
-pub trait Challenge {
-    type Input;
-    type Output;
-
-    fn name() -> String;
-    fn new(input: Self::Input) -> Self;
-    fn solve(&self) -> Self::Output;
-    fn verify(&self, answer: &Self::Output) -> bool;
-}
+use std::collections::HashSet;
+use crate::challenge::Challenge;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct MD5HashCashChallenge {
@@ -28,11 +20,11 @@ pub struct MD5HashCashOutput {
     hashcode: String,
 }
 
-impl MD5HashCashInput {
-    fn new(complexity: u32, message: &str) -> MD5HashCashInput {
-        MD5HashCashInput { complexity, message: String::from(message) }
-    }
-}
+// impl MD5HashCashInput {
+//     fn new(complexity: u32, message: &str) -> MD5HashCashInput {
+//         MD5HashCashInput { complexity, message: String::from(message) }
+//     }
+// }
 
 impl Challenge for MD5HashCashChallenge {
     type Input = MD5HashCashInput;
@@ -47,11 +39,17 @@ impl Challenge for MD5HashCashChallenge {
     }
 
     fn solve(&self) -> Self::Output {
+        let mut checked: HashSet<u64> = HashSet::new();
         let mut rng = rand::thread_rng();
         let field = Uniform::from(0..u64::MAX);
     
         loop {
-            let seed = field.sample(&mut rng);
+            let mut seed = field.sample(&mut rng);
+            while checked.contains(&seed) {
+                seed = field.sample(&mut rng);
+            }
+            checked.insert(seed);
+
             let input = format!("{seed:0>16X}{}", self.input.message);
             let hashcode = format!("{:X}", md5::compute(&input));
     

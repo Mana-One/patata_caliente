@@ -5,7 +5,7 @@ use crate::domain::{
     ReportedChallengeResult, 
     SubscribeError
 };
-use crate::challenge:: MD5HashCashInput;
+use crate::challenge::md5_hashcash::MD5HashCashInput;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub enum Message {

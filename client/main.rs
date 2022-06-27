@@ -1,5 +1,5 @@
-use std::{net::{TcpStream, Shutdown}, io::{Write, Read}, env};
-use serde_json;
+use std::net::{TcpStream, Shutdown};
+use std::env;
 use common::domain::ChallengeAnswer;
 use common::message::{
     Message, 
@@ -8,23 +8,25 @@ use common::message::{
     Challenge, 
     ChallengeResult,
 };
-use common::challenge::{MD5HashCashChallenge, Challenge as ChallengTrait};
+use common::challenge::{md5_hashcash::MD5HashCashChallenge, Challenge as ChallengTrait};
+use common::utils;
 
 fn main() {
     println!("Connecting to server...\n");
 
     let args: Vec<String> = env::args().collect();
-    let default = "omniscient_adjucator";
-    let username = args.get(1).map_or(default, |r| r.as_str());
+    let username = args.get(1).expect("Missing username !");
 
     let stream = TcpStream::connect("localhost:7878");
+    let mut handle_message = message_handler_builder(username.to_string());
+
     match stream {
         Ok(mut stream) => {
             // SEND MSG
-            write_message(&Message::Hello, &mut stream);
+            utils::write_message(&Message::Hello, &mut stream);
             
             loop {
-                if !read_message(&mut stream, username) {
+                if !utils::read_message(&mut stream, &mut handle_message) {
                     break;
                 }
             }
@@ -41,81 +43,57 @@ fn main() {
     }
 }
 
-fn write_message(message: &Message, stream: &mut TcpStream) {
-    let json = serde_json::to_string(message).unwrap();
-    let json = json.as_bytes();
-
-    let message_size = json.len() as u32;
-    stream.write_all(&message_size.to_be_bytes()).unwrap();
-    stream.write_all(json).unwrap();
-}
-
-// returns boolean indicating whether the client should keep the TCP connection alive
-fn read_message(stream: &mut TcpStream, username: &str) -> bool {
-    // READ SIZE OF RESPONSE
-    let mut size_res = [0u8; 4];
-    stream.read_exact(&mut size_res).unwrap();
-    let size: u32 = u32::from_be_bytes(size_res);
-
-    // READ DATA 
-    let mut data_res: Vec<u8> = vec![0u8; size.try_into().unwrap()];
-    stream.read_exact(&mut data_res).unwrap();
-    let msg = serde_json::from_str::<Message>(&String::from_utf8_lossy(&data_res)).unwrap();
-
-    handle_incoming_message(&msg, stream, username)
-}
-
-fn handle_incoming_message(msg: &Message, stream: &mut TcpStream, username: &str) -> bool {
-    println!("\n{:?}", msg);
-    match msg {
-        Message::Welcome(welcome) => {
-
-
-            write_message(&Message::Subscribe(
-                Subscribe::new(username) 
-            ), stream);
-            true
-        },
-        Message::SubscribeResult(subcribe_result) => {
-            // println!("{:?}", subcribe_result);
-            match subcribe_result {
-                SubscribeResult::Ok => true,
-                SubscribeResult::Err(_) => false
-            }
-        },
-        Message::PublicLeaderBoard(public_leader_board) => { 
-            // println!("{:?}", public_leader_board);
-            true
-        },
-        Message::Challenge(challenge) => { 
-            // println!("Received {:?}", challenge);
-            match challenge {
-                Challenge::MD5HashCash(hash_cash) => {
-                    let data = MD5HashCashChallenge::new(hash_cash.clone());
-                    let answer = data.solve();
-                    let target = if username == "omniscient_adjucator" 
-                        { "abject_testament" } 
-                        else { "omniscient_adjucator" };
-                    let message = ChallengeResult::new(
-                        ChallengeAnswer::MD5HashCash(answer), 
-                        target
-                    );
-                    write_message(&Message::ChallengeResult(message), stream);
-                    true
+fn message_handler_builder(username: String) -> utils::MessageHandler {
+    Box::new(move |msg, stream| {
+        println!("\n{:?}", msg);
+        match msg {
+            Message::Welcome(_welcome) => {
+                utils::write_message(&Message::Subscribe(
+                    Subscribe::new(username.as_str()) 
+                ), stream);
+                true
+            },
+            Message::SubscribeResult(subcribe_result) => {
+                // println!("{:?}", subcribe_result);
+                match subcribe_result {
+                    SubscribeResult::Ok => true,
+                    SubscribeResult::Err(_) => false
                 }
+            },
+            Message::PublicLeaderBoard(_public_leader_board) => { 
+                // println!("{:?}", public_leader_board);
+                true
+            },
+            Message::Challenge(challenge) => { 
+                // println!("Received {:?}", challenge);
+                match challenge {
+                    Challenge::MD5HashCash(hash_cash) => {
+                        let data = MD5HashCashChallenge::new(hash_cash.clone());
+                        let answer = data.solve();
+                        let target = if username == "omniscient_adjucator" 
+                            { "abject_testament" } 
+                            else { "omniscient_adjucator" };
+                        let message = ChallengeResult::new(
+                            ChallengeAnswer::MD5HashCash(answer), 
+                            target
+                        );
+                        utils::write_message(&Message::ChallengeResult(message), stream);
+                        true
+                    }
+                }
+            },
+            Message::RoundSummary(_round_summary) => { 
+                // println!("{:?}", round_summary);
+                true 
+            },
+            Message::EndOfGame(_end_of_game) => { 
+                // println!("{:?}", end_of_game);
+                false 
+            },
+            _ => {
+                println!("Invalid message {:?}", msg);
+                false
             }
-        },
-        Message::RoundSummary(round_summary) => { 
-            // println!("{:?}", round_summary);
-            true 
-        },
-        Message::EndOfGame(end_of_game) => { 
-            // println!("{:?}", end_of_game);
-            false 
-        },
-        _ => {
-            println!("Invalid message {:?}", msg);
-            false
         }
-    }
+    })
 }
