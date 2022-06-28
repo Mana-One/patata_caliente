@@ -3,8 +3,6 @@ use std::io::{Read, Write};
 use serde_json;
 use crate::message::Message;
 
-pub type MessageHandler = Box<dyn FnMut(&Message, &mut TcpStream) -> bool>;
-
 pub fn write_message(message: &Message, stream: &mut TcpStream) {
     let json = serde_json::to_string(message).unwrap();
     let json = json.as_bytes();
@@ -14,7 +12,9 @@ pub fn write_message(message: &Message, stream: &mut TcpStream) {
     stream.write_all(json).unwrap();
 }
 
-pub fn read_message(stream: &mut TcpStream, handle_message: &mut MessageHandler) -> bool {
+pub fn read_message<F>(stream: &mut TcpStream, handle_message: &mut F) -> bool 
+    where F : FnMut(&Message, &mut TcpStream) -> bool 
+{
     // READ SIZE OF RESPONSE
     let mut size_res = [0u8; 4];
     stream.read_exact(&mut size_res).unwrap();
