@@ -51,9 +51,10 @@ impl Challenge for MD5HashCashChallenge {
             checked.insert(seed);
 
             let input = format!("{seed:0>16X}{}", self.input.message);
-            let hashcode = format!("{:X}", md5::compute(&input));
+            let num_hashcode = u128::from_ne_bytes(md5::compute(&input).0);
+            let hashcode = format!("{:X}", num_hashcode);
     
-            let zeros = count_bits_to_zero(&hashcode);
+            let zeros = num_hashcode.leading_zeros();
             if zeros >= self.input.complexity {
                 return Self::Output {
                     seed,
@@ -67,7 +68,7 @@ impl Challenge for MD5HashCashChallenge {
         let seed = answer.seed;
         let input = format!("{seed:0>16X}{}", self.input.message);
         let hashcode = format!("{:X}", md5::compute(&input));
-        answer.hashcode == hashcode
+        count_bits_to_zero(&hashcode) >= self.input.complexity && answer.hashcode == hashcode
     }
 }
 
