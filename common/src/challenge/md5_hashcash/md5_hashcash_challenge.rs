@@ -10,8 +10,8 @@ pub struct MD5HashCashChallenge {
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct MD5HashCashInput {
-    complexity: u32,
-    message: String,
+    pub complexity: u32,
+    pub message: String,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
