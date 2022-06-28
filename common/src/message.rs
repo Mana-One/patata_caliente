@@ -22,12 +22,12 @@ pub enum Message {
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Welcome {
-    version: u8
+    pub version: u8
 }
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Subscribe {
-    name: String
+    pub name: String
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -58,7 +58,7 @@ pub struct RoundSummary {
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct EndOfGame {
-    leader_board: PublicLeaderBoard
+    pub leader_board: PublicLeaderBoard
 }
 
 impl Subscribe {
