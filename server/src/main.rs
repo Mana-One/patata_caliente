@@ -1,4 +1,4 @@
-use std::net::{Shutdown, TcpListener};
+use std::net::{Shutdown, TcpListener, TcpStream};
 
 use common::challenge::md5_hashcash::MD5HashCashInput;
 use common::domain::PublicPlayer;
@@ -15,7 +15,7 @@ fn main() {
 
     println!("Listening on port 7878");
     let players: Vec<PublicPlayer> = vec![];
-    let mut handle_message: utils::MessageHandler = message_handler_builder(players);
+    let mut handle_message = message_handler_builder(players);
 
     for message in listener.incoming() {
         match message {
@@ -38,8 +38,8 @@ fn main() {
     }
 }
 
-fn message_handler_builder(mut players: Vec<PublicPlayer>) -> utils::MessageHandler {
-    Box::new(move |msg, stream| {
+fn message_handler_builder(mut players: Vec<PublicPlayer>) -> impl FnMut(&Message, &mut TcpStream) -> bool {
+    move |msg, stream| {
         println!("\n{:?}", msg);
         match msg {
             Message::Hello => {
@@ -98,5 +98,5 @@ fn message_handler_builder(mut players: Vec<PublicPlayer>) -> utils::MessageHand
             Message::RoundSummary(_) => true,
             Message::EndOfGame(_) => true
         }
-    })
+    }
 }
