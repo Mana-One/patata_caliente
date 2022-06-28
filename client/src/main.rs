@@ -41,7 +41,7 @@ fn launch_client(username: String) {
 
     let stream = TcpStream::connect("localhost:7878");
     let players: Vec<PublicPlayer> = vec![];
-    let mut handle_message = message_handler_builder(username.to_string(), players);
+    let mut handle_message: utils::MessageHandler = message_handler_builder(username, players);
 
     match stream {
         Ok(mut stream) => {
