@@ -20,12 +20,6 @@ pub struct MD5HashCashOutput {
     hashcode: String,
 }
 
-// impl MD5HashCashInput {
-//     fn new(complexity: u32, message: &str) -> MD5HashCashInput {
-//         MD5HashCashInput { complexity, message: String::from(message) }
-//     }
-// }
-
 impl Challenge for MD5HashCashChallenge {
     type Input = MD5HashCashInput;
     type Output = MD5HashCashOutput;
