@@ -12,7 +12,6 @@ use common::utils;
 
 pub fn message_handler_builder(username: String, mut players: Vec<PublicPlayer>) -> impl FnMut(&Message, &mut TcpStream) -> bool {
     move |msg, stream| {
-        println!("\n{:?}", msg);
         match msg {
             Message::Welcome(_welcome) => {
                 utils::write_message(&Message::Subscribe(
@@ -21,7 +20,6 @@ pub fn message_handler_builder(username: String, mut players: Vec<PublicPlayer>)
                 true
             },
             Message::SubscribeResult(subcribe_result) => {
-                // println!("{:?}", subcribe_result);
                 match subcribe_result {
                     SubscribeResult::Ok => true,
                     SubscribeResult::Err(_) => false
@@ -37,8 +35,7 @@ pub fn message_handler_builder(username: String, mut players: Vec<PublicPlayer>)
                 
                 !players.is_empty()
             },
-            Message::Challenge(challenge) => { 
-                // println!("Received {:?}", challenge);
+            Message::Challenge(challenge) => {
                 match challenge {
                     Challenge::MD5HashCash(hash_cash) => {
                         let data = MD5HashCashChallenge::new(hash_cash.clone());
@@ -60,8 +57,7 @@ pub fn message_handler_builder(username: String, mut players: Vec<PublicPlayer>)
                     }
                 }
             },
-            Message::RoundSummary(_round_summary) => { 
-                // println!("{:?}", round_summary);
+            Message::RoundSummary(_round_summary) => {
                 true 
             },
             Message::EndOfGame(_end_of_game) => { 

@@ -40,7 +40,6 @@ fn main() {
 
 fn message_handler_builder(mut players: Vec<PublicPlayer>) -> impl FnMut(&Message, &mut TcpStream) -> bool {
     move |msg, stream| {
-        println!("\n{:?}", msg);
         match msg {
             Message::Hello => {
                 utils::write_message(&Message::Welcome(
