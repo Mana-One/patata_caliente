@@ -1,4 +1,5 @@
 use std::net::{Shutdown, TcpStream};
+use common::challenge::monstrous_maze::MonstrousMazeChallenge;
 use common::domain::{ChallengeAnswer, PublicPlayer};
 use common::message::{
     Message, 
@@ -12,6 +13,7 @@ use common::utils;
 
 pub fn message_handler_builder(username: String, mut players: Vec<PublicPlayer>) -> impl FnMut(&Message, &mut TcpStream) -> bool {
     move |msg, stream| {
+        println!("{msg:?}");
         match msg {
             Message::Welcome(_welcome) => {
                 utils::write_message(&Message::Subscribe(
@@ -50,6 +52,25 @@ pub fn message_handler_builder(username: String, mut players: Vec<PublicPlayer>)
 
                         let message = ChallengeResult::new(
                             ChallengeAnswer::MD5HashCash(answer), 
+                            target.unwrap()
+                        );
+                        utils::write_message(&Message::ChallengeResult(message), stream);
+                        true
+                    },
+
+                    Challenge::MonstrousMaze(maze) => {
+                        let data = MonstrousMazeChallenge::new(maze.clone());
+                        let answer = data.solve();
+
+                        let mut sorted_players = players.clone();
+                        sorted_players.sort_by(|a, b| a.score.cmp(&b.score));
+                        let target = sorted_players.get(0).map(|p| p.name.as_str());
+                        if let None = target {
+                            return false;
+                        }
+
+                        let message = ChallengeResult::new(
+                            ChallengeAnswer::MonstrousMaze(answer), 
                             target.unwrap()
                         );
                         utils::write_message(&Message::ChallengeResult(message), stream);

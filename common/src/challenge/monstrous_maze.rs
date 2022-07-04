@@ -3,7 +3,7 @@ use std::collections::{HashSet, VecDeque};
 use serde::{Deserialize, Serialize};
 use crate::challenge::Challenge;
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct MonstrousMazeInput {
     pub grid: String,
     pub endurance: u8,
@@ -15,7 +15,7 @@ pub struct MonstrousMazeOutput {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-pub struct MonstruousMazeChallenge {
+pub struct MonstrousMazeChallenge {
     input: MonstrousMazeInput
 }
 
@@ -66,16 +66,16 @@ enum Direction {
     West
 }
 
-impl Challenge for MonstruousMazeChallenge {
+impl Challenge for MonstrousMazeChallenge {
     type Input = MonstrousMazeInput;
     type Output = MonstrousMazeOutput;
 
     fn name() -> String {
-        "MonstruousMaze".to_string()
+        "MonstrousMaze".to_string()
     }
 
     fn new(input: Self::Input) -> Self {
-        MonstruousMazeChallenge { input }
+        MonstrousMazeChallenge { input }
     }
 
     fn solve(&self) -> Self::Output {
@@ -207,7 +207,7 @@ fn get_start(grid: &Row, width: usize, endurance: u8) -> Node {
     let (idx, _) = grid
         .iter()
         .enumerate()
-        .find(|(_, &c)| c == 'Y').unwrap();
+        .find(|(_, &c)| c == 'Y' || c == 'I' ).unwrap();
     Node::new(idx / width, idx % width, endurance)
 }
 
