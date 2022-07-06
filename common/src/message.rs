@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use crate::challenge::monstrous_maze::MonstrousMazeInput;
 use crate::domain::{
     ChallengeAnswer, 
     PublicPlayer, 
@@ -41,7 +42,8 @@ pub struct PublicLeaderBoard(pub Vec<PublicPlayer>);
 
 #[derive(Deserialize, Serialize, Debug)]
 pub enum Challenge {
-    MD5HashCash(MD5HashCashInput)
+    MD5HashCash(MD5HashCashInput),
+    MonstrousMaze(MonstrousMazeInput)
 }
 
 #[derive(Deserialize, Serialize, Debug)]

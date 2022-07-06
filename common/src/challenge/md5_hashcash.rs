@@ -25,7 +25,7 @@ impl Challenge for MD5HashCashChallenge {
     type Output = MD5HashCashOutput;
 
     fn name() -> String {
-        todo!()
+        "MD5HashCash".to_string()
     }
 
     fn new(input: Self::Input) -> Self {
