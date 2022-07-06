@@ -1,6 +1,4 @@
 use serde::{Deserialize, Serialize};
-use rand::distributions::{Distribution, Uniform};
-use std::collections::HashSet;
 use crate::challenge::Challenge;
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -33,17 +31,7 @@ impl Challenge for MD5HashCashChallenge {
     }
 
     fn solve(&self) -> Self::Output {
-        let mut checked: HashSet<u64> = HashSet::new();
-        let mut rng = rand::thread_rng();
-        let field = Uniform::from(0..u64::MAX);
-    
-        loop {
-            let mut seed = field.sample(&mut rng);
-            while checked.contains(&seed) {
-                seed = field.sample(&mut rng);
-            }
-            checked.insert(seed);
-
+        for seed in 0..=u64::MAX {
             let input = format!("{seed:0>16X}{}", self.input.message);
             let num_hashcode = u128::from_ne_bytes(md5::compute(&input).0);
             let hashcode = format!("{:X}", num_hashcode);
@@ -55,6 +43,11 @@ impl Challenge for MD5HashCashChallenge {
                     hashcode
                 };
             }
+        }
+
+        Self::Output {
+            seed: 0,
+            hashcode: "".to_string()
         }
     }
 
