@@ -1,5 +1,6 @@
 use clap::{Arg, App, SubCommand};
-use std::net::TcpStream;
+use std::io::Error;
+use std::net::{TcpStream};
 use common::domain::PublicPlayer;
 use common::message::Message;
 use common::utils;
@@ -37,33 +38,32 @@ fn main() {
                 run_args.get_one::<String>("username"), 
                 run_args.get_one::<String>("server")
             ) {
-                launch_client(username.to_string(), server.to_string());
+                match launch_client(username.to_string(), server.to_string()) {
+                    Ok(_) => {},
+                    Err(e) => println!("{e:?}")
+                };
             }
         },
         _ => unreachable!("Exhausted list of subcommands")
     }
 }
 
-fn launch_client(username: String, server: String) {
+fn launch_client(username: String, server: String) -> Result<(), Error>{
     println!("Connecting to server...\n");
 
-    let stream = TcpStream::connect(server.as_str());
+    let mut stream = TcpStream::connect(server.as_str())?;
     let players: Vec<PublicPlayer> = vec![];
     let mut handle_message = handler::message_handler_builder(username, players);
 
-    match stream {
-        Ok(mut stream) => {
-            // SEND MSG
-            utils::write_message(&Message::Hello, &mut stream);
-            
-            loop {
-                if !utils::read_message(&mut stream, &mut handle_message) {
-                    break;
-                }
-            }
-        },
-        Err(e) => {
-            println!("Cannot connect to server: {}", e);
+    // SEND MSG
+    utils::write_message(&Message::Hello, &mut stream)?;
+    
+    loop {
+        let proceed = utils::read_message(&mut stream, &mut handle_message)?;
+        if !proceed {
+            break;
         }
     }
+
+    Ok(())
 }
