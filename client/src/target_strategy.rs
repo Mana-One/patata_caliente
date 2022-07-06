@@ -19,7 +19,8 @@ fn target_rand(players: &Vec<PublicPlayer>) -> Option<String> {
 }
 
 fn target_best(players: &Vec<PublicPlayer>) -> Option<String> {
-    let mut sorted_players = players.clone();
-    sorted_players.sort_by(|a, b| a.score.cmp(&b.score));
-    sorted_players.get(0).map(|p| p.clone().name)
+    players
+        .iter()
+        .max_by(|p1, p2| p1.score.cmp(&p2.score))
+        .map(|p| p.clone().name)
 }
