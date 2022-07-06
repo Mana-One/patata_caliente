@@ -11,6 +11,7 @@ use common::message::{
 };
 use common::challenge::{md5_hashcash::MD5HashCashChallenge, Challenge as ChallengTrait};
 use common::utils;
+use crate::target_strategy::select_target;
 
 pub fn message_handler_builder(username: String, mut players: Vec<PublicPlayer>) -> 
     impl FnMut(&Message, &mut TcpStream) -> Result<bool, Error> {
@@ -46,35 +47,33 @@ pub fn message_handler_builder(username: String, mut players: Vec<PublicPlayer>)
                         let data = MD5HashCashChallenge::new(hash_cash.clone());
                         let answer = data.solve();
 
-                        let mut sorted_players = players.clone();
-                        sorted_players.sort_by(|a, b| a.score.cmp(&b.score));
-                        let target = sorted_players.get(0).map(|p| p.name.as_str());
-                        if let None = target {
-                            return Ok(false);
+                        let target = select_target(&players);
+
+                        if let Some(target) = target {
+                            let message = ChallengeResult::new(
+                                ChallengeAnswer::MD5HashCash(answer), 
+                                target.as_str()
+                            );
+                            utils::write_message(&Message::ChallengeResult(message), stream)?;
+                            return Ok(true);
                         }
 
-                        let message = ChallengeResult::new(
-                            ChallengeAnswer::MD5HashCash(answer), 
-                            target.unwrap()
-                        );
-                        utils::write_message(&Message::ChallengeResult(message), stream)?;
-                        Ok(true)
+                        Ok(false)
                     },
 
                     Challenge::MonstrousMaze(maze) => {
                         let data = MonstrousMazeChallenge::new(maze.clone());
                         let answer = data.solve();
 
-                        let mut sorted_players = players.clone();
-                        sorted_players.sort_by(|a, b| a.score.cmp(&b.score));
-                        let target = sorted_players.get(0).map(|p| p.name.as_str());
+                        let target = select_target(&players);
+
                         if let None = target {
                             return Ok(false);
                         }
 
                         let message = ChallengeResult::new(
                             ChallengeAnswer::MonstrousMaze(answer), 
-                            target.unwrap()
+                            target.unwrap().as_str()
                         );
                         utils::write_message(&Message::ChallengeResult(message), stream)?;
                         Ok(true)

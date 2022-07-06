@@ -6,6 +6,7 @@ use common::message::Message;
 use common::utils;
 
 mod handler;
+mod target_strategy;
 
 fn main() {
     let run_cmd = SubCommand::with_name("run")
@@ -26,7 +27,7 @@ fn main() {
             .help("The server url for the games."));
 
     let app = App::new("La patata caliente")
-        .about("A client app for 'La patate chaude'... but it's in a Spanish name.")
+        .about("A client app for 'La patate chaude'... but it's a Spanish name.")
         .author("Paul Barrié | Paolo Manaois | Adem Mrizak")
         .version("0.1.0")
         .subcommand_required(true)
