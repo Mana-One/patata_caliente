@@ -53,7 +53,11 @@ impl Node {
     }
 
     fn take_damage(self: &Self) -> Node {
-        Node { line: self.line, column: self.column, endurance: self.endurance - 1 }
+        if self.endurance > 0 {
+            return Node { line: self.line, column: self.column, endurance: self.endurance - 1 };
+        }
+        Node { line: self.line, column: self.column, endurance: 0 }
+        
     }
 }
 
@@ -85,7 +89,7 @@ impl Challenge for MonstrousMazeChallenge {
         let mut visited: HashSet<Coordinates> = HashSet::new();
         let mut path = get_path_map(&grid);
         let mut end = [0usize; 2];
-        let valid = ['Y', ' ', 'M', 'X'];
+        let valid = [' ', 'M', 'X'];
 
         visited.insert([start.line, start.column]);
         queue.push_back(start);
@@ -176,20 +180,24 @@ impl Challenge for MonstrousMazeChallenge {
         let (grid, width, _) = get_grid(&self.input.grid);
         let start = get_start(&grid, width, self.input.endurance);
 
+        let copied_grid = grid.clone();
         let end = answer.path
             .chars()
             .fold(start, move |acc, x| {
-                if x == '^' {
-                    return acc.go_north();
-                } else if x == '>' {
-                    return acc.go_east();
-                } else if x == 'v' {
-                    return acc.go_south();
-                } else {
-                    return acc.go_west();
+                let next = match x {
+                    '^' => acc.go_north(),
+                    '>' => acc.go_east(),
+                    'v' => acc.go_south(),
+                    _ => acc.go_west()
+                };
+                if copied_grid[next.line * width + next.column] == 'M' {
+                    return next.take_damage();
                 }
+
+                next
             });
-        grid[end.line * width + end.column] == 'X'
+        println!("{} {}", end.endurance, grid[end.line * width + end.column]);
+        end.endurance > 0 && grid[end.line * width + end.column] == 'X'
     }
 }
 
