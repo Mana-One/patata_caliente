@@ -1,3 +1,4 @@
+use std::io::Error;
 use std::net::{Shutdown, TcpListener, TcpStream};
 
 use common::challenge::md5_hashcash::MD5HashCashInput;
@@ -21,8 +22,13 @@ fn main() {
         match message {
             Ok(mut stream) => {
                 loop {
-                    if !read_message(&mut stream, &mut handle_message) {
-                        break;
+                    match read_message(&mut stream, &mut handle_message) {
+                        Ok(true) => {},
+                        Ok(false) => { break; },
+                        Err(e) => {
+                            println!("{e:?}");
+                            break;
+                        }
                     }
                 }
 
@@ -38,22 +44,22 @@ fn main() {
     }
 }
 
-fn message_handler_builder(mut players: Vec<PublicPlayer>) -> impl FnMut(&Message, &mut TcpStream) -> bool {
+fn message_handler_builder(mut players: Vec<PublicPlayer>) -> impl FnMut(&Message, &mut TcpStream) -> Result<bool, Error>  {
     move |msg, stream| {
         match msg {
             Message::Hello => {
                 utils::write_message(&Message::Welcome(
                     Welcome { version: 1 }
-                ), stream);
-                true
+                ), stream)?;
+                Ok(true)
             }
-            Message::Welcome(_) => true,
+            Message::Welcome(_) => Ok(true),
             Message::Subscribe(subscribe) => {
                 players.append(
                     &mut vec![
                         PublicPlayer {
                             name: subscribe.name.clone(),
-                            stream_id: stream.peer_addr().unwrap().to_string(),
+                            stream_id: stream.peer_addr()?.to_string(),
                             score: 0,
                             steps: 0,
                             is_active: true,
@@ -71,7 +77,7 @@ fn message_handler_builder(mut players: Vec<PublicPlayer>) -> impl FnMut(&Messag
                 );
                 utils::write_message(&Message::PublicLeaderBoard(
                     PublicLeaderBoard(players.clone())
-                ), stream);
+                ), stream)?;
 
                 utils::write_message(&Message::Challenge(
                     Challenge::MD5HashCash(
@@ -80,22 +86,22 @@ fn message_handler_builder(mut players: Vec<PublicPlayer>) -> impl FnMut(&Messag
                             message: "è_b987b-_vbè(79B".to_string(),
                         }
                     )
-                ), stream);
-                true
+                ), stream)?;
+                Ok(true)
             }
-            Message::SubscribeResult(_) => true,
-            Message::PublicLeaderBoard(_) => true,
-            Message::Challenge(_) => true,
+            Message::SubscribeResult(_) => Ok(true),
+            Message::PublicLeaderBoard(_) => Ok(true),
+            Message::Challenge(_) => Ok(true),
             Message::ChallengeResult(_) => {
                 utils::write_message(&Message::EndOfGame(
                     EndOfGame {
                         leader_board: PublicLeaderBoard(players.clone()),
                     }
-                ), stream);
-                false
+                ), stream)?;
+                Ok(false)
             }
-            Message::RoundSummary(_) => true,
-            Message::EndOfGame(_) => true
+            Message::RoundSummary(_) => Ok(true),
+            Message::EndOfGame(_) => Ok(true)
         }
     }
 }
